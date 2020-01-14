@@ -4,4 +4,6 @@
 *.iml
 *.xml
 *.pyc
+JavaExtractor/JPredict/.settings/
+JavaExtractor/JPredict/.project
 

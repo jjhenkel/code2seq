@@ -14,6 +14,13 @@ Contributions are welcome.
 
 <center style="padding: 40px"><img width="70%" src="https://github.com/tech-srl/code2seq/raw/master/images/network.png" /></center>
 
+## See also:
+  * **Structural Language Models for Any-Code Generation** is a new paper that learns to generate the missing code within a larger code snippet. This is similar to code completion, but is able to predict complex expressions rather than a single token at a time. See [PDF](https://arxiv.org/pdf/1910.00577.pdf) (demo: soon).
+  * **Adversarial Examples for Models of Code** is a new paper that shows how to slightly mutate the input code snippet of code2vec and GNNs models (thus, introducing adversarial examples), such that the model (code2vec or GNNs) will output a prediction of our choice. See [PDF](https://arxiv.org/pdf/1910.07517.pdf) (code: soon).
+  * **Neural Reverse Engineering of Stripped Binaries** is a new paper that learns to predict procedure names in stripped binaries, thus use neural networks for reverse engineering. See [PDF](https://arxiv.org/pdf/1902.09122) (code: soon).
+  * **code2vec** (POPL'2019) is our previous model. It can only generate a single label at a time (rather than a sequence as code2seq), but it is much faster to train (because of its simplicity). See [PDF](https://urialon.cswp.cs.technion.ac.il/wp-content/uploads/sites/83/2018/12/code2vec-popl19.pdf), demo at [https://code2vec.org](https://code2vec.org) and [code](https://github.com/tech-srl/code2vec/).
+
+
 Table of Contents
 =================
   * [Requirements](#requirements)
@@ -31,6 +38,7 @@ Table of Contents
 > python3 -c 'import tensorflow as tf; print(tf.\_\_version\_\_)'
   * For [creating a new Java dataset](#creating-and-preprocessing-a-new-java-dataset) or [manually examining a trained model](#step-4-manual-examination-of-a-trained-model) (any operation that requires parsing of a new code example): [JDK](https://openjdk.java.net/install/)
   * For creating a C# dataset: [dotnet-core](https://dotnet.microsoft.com/download) version 2.2 or newer.
+  * `pip install rouge` for computing rouge scores.
 
 ## Quickstart
 ### Step 0: Cloning this repository
@@ -169,6 +177,18 @@ This will save a copy of the trained model with the '.release' suffix.
 A "released" model usually takes ~3x less disk space.
 
 ## Extending to other languages  
+
+This project currently supports Java and C\# as the input languages.
+
+_**January 2020** - a code2seq extractor for Python (specifically targeting the Python150k dataset) was contributed by [@stasbel](https://github.com/stasbel). See: [https://github.com/tech-srl/code2seq/tree/master/Python150kExtractor](https://github.com/tech-srl/code2seq/tree/master/Python150kExtractor)._
+
+_**January 2020** - an extractor for predicting TypeScript type annotations for JavaScript input using code2vec was developed by [@izosak](https://github.com/izosak) and Noa Cohen, and is available here:
+[https://github.com/tech-srl/id2vec](https://github.com/tech-srl/id2vec)._
+
+~~_**June 2019** - an extractor for **C** that is compatible with our model was developed by [CMU SEI team](https://github.com/cmu-sei/code2vec-c)._~~ - removed by CMU SEI team.
+
+_**June 2019** - a code2vec extractor for **Python, Java, C, C++** by JetBrains Research is available here: [PathMiner](https://github.com/JetBrains-Research/astminer)._
+
 To extend code2seq to other languages other than Java and C#, a new extractor (similar to the [JavaExtractor](JavaExtractor))
 should be implemented, and be called by [preprocess.sh](preprocess.sh).
 Basically, an extractor should be able to output for each directory containing source files:

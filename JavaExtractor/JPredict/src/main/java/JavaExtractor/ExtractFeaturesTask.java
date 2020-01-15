@@ -81,8 +81,12 @@ class ExtractFeaturesTask implements Callable<Void> {
             code = contents;
         }
 
-        FeatureExtractor featureExtractor = new FeatureExtractor(m_CommandLineValues);
-        return featureExtractor.extractFeatures(code);
+        try {
+            FeatureExtractor featureExtractor = new FeatureExtractor(m_CommandLineValues);
+            return featureExtractor.extractFeatures(code);
+        } catch (Exception ex) {
+            return new ArrayList<>();
+        }
     }
 
     public String featuresToString(ArrayList<ProgramFeatures> features) {

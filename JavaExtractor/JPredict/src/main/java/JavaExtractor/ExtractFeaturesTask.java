@@ -16,10 +16,18 @@ import java.util.concurrent.Callable;
 class ExtractFeaturesTask implements Callable<Void> {
     private final CommandLineValues m_CommandLineValues;
     private final Path filePath;
+    private final String contents;
 
     public ExtractFeaturesTask(CommandLineValues commandLineValues, Path path) {
         m_CommandLineValues = commandLineValues;
         this.filePath = path;
+        this.contents = null;
+    }
+
+    public ExtractFeaturesTask(CommandLineValues commandLineValues, String contents) {
+        m_CommandLineValues = commandLineValues;
+        this.filePath = null;
+        this.contents = contents;
     }
 
     @Override
@@ -46,22 +54,39 @@ class ExtractFeaturesTask implements Callable<Void> {
         }
     }
 
+    private static int countLines(String str){
+        String[] lines = str.split("\r\n|\r|\n");
+        return  lines.length;
+    }
+
     private ArrayList<ProgramFeatures> extractSingleFile() throws IOException {
         String code;
 
-        if (m_CommandLineValues.MaxFileLength > 0 &&
-                Files.lines(filePath, Charset.defaultCharset()).count() > m_CommandLineValues.MaxFileLength) {
+        if (filePath != null) {
+            if (m_CommandLineValues.MaxFileLength > 0 &&
+                    Files.lines(filePath, Charset.defaultCharset()).count() > m_CommandLineValues.MaxFileLength) {
+                return new ArrayList<>();
+            }
+            try {
+                code = new String(Files.readAllBytes(filePath));
+            } catch (IOException e) {
+                e.printStackTrace();
+                code = Common.EmptyString;
+            }
+        } else {
+            if (m_CommandLineValues.MaxFileLength > 0 &&
+                    countLines(contents) > m_CommandLineValues.MaxFileLength) {
+                return new ArrayList<>();
+            }
+            code = contents;
+        }
+
+        try {
+            FeatureExtractor featureExtractor = new FeatureExtractor(m_CommandLineValues);
+            return featureExtractor.extractFeatures(code);
+        } catch (Exception ex) {
             return new ArrayList<>();
         }
-        try {
-            code = new String(Files.readAllBytes(filePath));
-        } catch (IOException e) {
-            e.printStackTrace();
-            code = Common.EmptyString;
-        }
-        FeatureExtractor featureExtractor = new FeatureExtractor(m_CommandLineValues);
-
-        return featureExtractor.extractFeatures(code);
     }
 
     public String featuresToString(ArrayList<ProgramFeatures> features) {

@@ -69,8 +69,14 @@ class FeatureExtractor {
                 parsed = JavaParser.parse(content);
             } catch (ParseProblemException e2) {
                 // Wrap with a class only
-                content = classPrefix + code + classSuffix;
-                parsed = JavaParser.parse(content);
+                try {
+                    content = classPrefix + code + classSuffix;
+                    parsed = JavaParser.parse(content);
+                } catch (ParseProblemException e3) {
+                    // Missing closing '}' ?
+                    content = code + "\n}";
+                    parsed = JavaParser.parse(content);
+                }
             }
         }
 

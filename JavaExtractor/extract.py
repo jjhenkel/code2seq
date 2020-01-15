@@ -44,7 +44,7 @@ def ExtractFeaturesForDir(args, dir, prefix):
 
         if sleeper.poll() == 0:
             if len(stderr) > 0:
-                print(stderr, file=sys.stderr)
+                print(stderr.decode(), file=sys.stderr)
         else:
             print('dir: ' + str(dir) + ' was not completed in time', file=sys.stderr)
             failed = True
@@ -89,7 +89,7 @@ if __name__ == '__main__':
                   str(args.max_path_length) + ' --max_path_width ' + str(args.max_path_width) + ' --file ' + args.file
         os.system(command)
     elif args.dir is not None:
-        subdirs = get_immediate_subdirectories(args.dir)
-        if len(subdirs) == 0:
-            subdirs = [args.dir]
-        ExtractFeaturesForDirsList(args, subdirs)
+        # subdirs = get_immediate_subdirectories(args.dir)
+        # if len(subdirs) == 0:
+            # subdirs = [args.dir]
+        ExtractFeaturesForDirsList(args, [args.dir])

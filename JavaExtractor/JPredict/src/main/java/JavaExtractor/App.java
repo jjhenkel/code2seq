@@ -13,6 +13,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import java.io.*;
+import java.util.*;
+import java.util.regex.*;
+import java.util.stream.*;
+import java.util.zip.GZIPInputStream;
+import java.lang.Thread;
+import java.nio.file.Path;
+
+import com.google.gson.*;
+
 public class App {
     private static CommandLineValues s_CommandLineValues;
 
@@ -37,11 +47,28 @@ public class App {
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(s_CommandLineValues.NumThreads);
         LinkedList<ExtractFeaturesTask> tasks = new LinkedList<>();
         try {
-            Files.walk(Paths.get(s_CommandLineValues.Dir)).filter(Files::isRegularFile)
-                    .filter(p -> p.toString().toLowerCase().endsWith(".java")).forEach(f -> {
-                ExtractFeaturesTask task = new ExtractFeaturesTask(s_CommandLineValues, f);
+
+            InputStream fileStream = new FileInputStream(s_CommandLineValues.Dir);
+
+			// File (gzipped) -> Decoded Stream -> Lines
+			InputStream gzipStream = new GZIPInputStream(fileStream);
+			Reader decoder = new InputStreamReader(gzipStream, "UTF-8");
+			BufferedReader buffered = new BufferedReader(decoder);
+
+			// From gzip, create virtual files
+			String line;
+			JsonParser parser = new JsonParser();
+			while ((line = buffered.readLine()) != null) {
+				JsonObject asJson = parser.parse(line).getAsJsonObject();
+
+                ExtractFeaturesTask task = new ExtractFeaturesTask(
+                    s_CommandLineValues,
+                    asJson.get("source_code").getAsString()
+                );
+
                 tasks.add(task);
-            });
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
             return;

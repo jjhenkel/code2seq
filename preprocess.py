@@ -73,6 +73,8 @@ if __name__ == '__main__':
                         help="path to training data file", required=True)
     parser.add_argument("-ted", "--test_data", dest="test_data_path",
                         help="path to test data file", required=True)
+    parser.add_argument("-bld", "--baseline_data", dest="baseline_data_path",
+                        help="path to baseline data file", required=False)
     parser.add_argument("-vd", "--val_data", dest="val_data_path",
                         help="path to validation data file", required=True)
     parser.add_argument("-mc", "--max_contexts", dest="max_contexts", default=200,
@@ -96,6 +98,7 @@ if __name__ == '__main__':
     train_data_path = args.train_data_path
     test_data_path = args.test_data_path
     val_data_path = args.val_data_path
+    baseline_data_path = args.baseline_data_path
     subtoken_histogram_path = args.subtoken_histogram
     node_histogram_path = args.node_histogram
 
@@ -110,7 +113,15 @@ if __name__ == '__main__':
     print('target vocab size: ', len(target_to_count))
 
     num_training_examples = 0
-    for data_file_path, data_role in zip([test_data_path, val_data_path, train_data_path], ['test', 'val', 'train']):
+    the_zip = None
+    if baseline_data_path is not None:
+        the_zip = zip(
+            [test_data_path, baseline_data_path, val_data_path, train_data_path], ['test', 'baseline', 'val', 'train']
+        )
+    else:
+        the_zip = zip([test_data_path, val_data_path, train_data_path], ['test', 'val', 'train'])
+
+    for data_file_path, data_role in the_zip:
         num_examples = process_file(file_path=data_file_path, data_file_role=data_role, dataset_name=args.output_name,
                                     max_contexts=int(args.max_contexts), max_data_contexts=int(args.max_data_contexts))
         if data_role == 'train':

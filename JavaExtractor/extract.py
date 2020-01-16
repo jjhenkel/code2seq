@@ -47,6 +47,8 @@ def ExtractFeaturesForDir(args, dir, prefix):
                 print(stderr.decode(), file=sys.stderr)
         else:
             print('dir: ' + str(dir) + ' was not completed in time', file=sys.stderr)
+            if len(stderr) > 0:
+                print(stderr.decode(), file=sys.stderr)
             failed = True
             subdirs = get_immediate_subdirectories(dir)
             for subdir in subdirs:

@@ -1,5 +1,6 @@
 import argparse
 import re
+import os
 import json
 import multiprocessing
 import itertools
@@ -14,7 +15,6 @@ METHOD_NAME, NUM = 'METHODNAME', 'NUM'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', required=True, type=str)
-parser.add_argument('--valid_p', type=float, default=0.2)
 parser.add_argument('--max_path_length', type=int, default=8)
 parser.add_argument('--max_path_width', type=int, default=2)
 parser.add_argument('--use_method_name', type=bool, default=True)
@@ -157,7 +157,7 @@ def __collect_all_and_save(asts, args, output_file):
     parallel = joblib.Parallel(n_jobs=args.n_jobs)
     func = joblib.delayed(__collect_samples)
 
-    samples = parallel(func(ast, args) for ast in tqdm.tqdm(asts))
+    samples = parallel(func(ast, args) for ast in tqdm.tqdm(asts, desc="  + Collecting and saving to: '{}'".format(output_file)))
     samples = list(itertools.chain.from_iterable(samples))
 
     with open(output_file, 'w') as f:
@@ -166,18 +166,14 @@ def __collect_all_and_save(asts, args, output_file):
 
 
 def main():
+    print("Collecting python ASTs (extract.py):")
     args = parser.parse_args()
     np.random.seed(args.seed)
 
     data_dir = Path(args.data_dir)
-    trains = __collect_asts(data_dir / 'python100k_train.json')
-    evals = __collect_asts(data_dir / 'python50k_eval.json')
-
-    train, valid = sklearn_model_selection.train_test_split(
-        trains,
-        test_size=args.valid_p,
-    )
-    test = evals
+    train = __collect_asts(data_dir / 'train.json')
+    test = __collect_asts(data_dir / 'test.json')
+    valid = __collect_asts(data_dir / 'valid.json')
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(exist_ok=True)
@@ -187,6 +183,14 @@ def main():
     ):
         output_file = output_dir / f'{split_name}_output_file.txt'
         __collect_all_and_save(split, args, output_file)
+
+    print("Checking for baseline.json...")
+    if (data_dir / 'baseline.json').exists():
+        print("  + Exists")
+        output_file = output_dir / f'baseline_output_file.txt'
+        __collect_all_and_save(split, args, output_file)
+
+    print("Complete!")
 
 
 if __name__ == '__main__':

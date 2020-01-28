@@ -144,11 +144,11 @@ def __collect_sample(ast, fd_index, args):
 
 def __collect_samples(ast, args):
     samples = []
-    for node_index, node in enumerate(ast):
+    for node_index, node in enumerate(ast['ast']):
         if node['type'] == 'FunctionDef':
-            sample = __collect_sample(ast, node_index, args)
+            sample = __collect_sample(ast['ast'], node_index, args)
             if sample is not None:
-                samples.append(sample)
+                samples.append((ast['from_file'], sample))
 
     return samples
 
@@ -161,8 +161,8 @@ def __collect_all_and_save(asts, args, output_file):
     samples = list(itertools.chain.from_iterable(samples))
 
     with open(output_file, 'w') as f:
-        for line_index, line in enumerate(samples):
-            f.write(line + ('' if line_index == len(samples) - 1 else '\n'))
+        for line_index, (from_file, line) in enumerate(samples):
+            f.write(from_file + ' ' + line + ('' if line_index == len(samples) - 1 else '\n'))
 
 
 def main():

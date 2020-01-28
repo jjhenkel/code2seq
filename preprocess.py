@@ -33,8 +33,9 @@ def process_file(file_path, data_file_role, dataset_name, max_contexts, max_data
         with open(file_path, 'r') as file:
             for line in file:
                 parts = line.rstrip('\n').split(' ')
-                target_name = parts[0]
-                contexts = parts[1:]
+                from_file = parts[0]
+                target_name = parts[1]
+                contexts = parts[2:]
 
                 if len(contexts) > max_unfiltered:
                     max_unfiltered = len(contexts)
@@ -47,7 +48,7 @@ def process_file(file_path, data_file_role, dataset_name, max_contexts, max_data
 
                 csv_padding = " " * (max_data_contexts - len(contexts))
                 total += 1
-                outfile.write(target_name + ' ' + " ".join(contexts) + csv_padding + '\n')
+                outfile.write(from_file + ' ' + target_name + ' ' + " ".join(contexts) + csv_padding + '\n')
 
     print('File: ' + data_file_path)
     print('Average total contexts: ' + str(float(sum_total) / total))

@@ -17,17 +17,20 @@ class ExtractFeaturesTask implements Callable<Void> {
     private final CommandLineValues m_CommandLineValues;
     private final Path filePath;
     private final String contents;
+    private final String fromFile;
 
     public ExtractFeaturesTask(CommandLineValues commandLineValues, Path path) {
         m_CommandLineValues = commandLineValues;
         this.filePath = path;
         this.contents = null;
+        this.fromFile = null;
     }
 
-    public ExtractFeaturesTask(CommandLineValues commandLineValues, String contents) {
+    public ExtractFeaturesTask(CommandLineValues commandLineValues, String contents, String fromFile) {
         m_CommandLineValues = commandLineValues;
         this.filePath = null;
         this.contents = contents;
+        this.fromFile = fromFile;
     }
 
     @Override
@@ -52,7 +55,7 @@ class ExtractFeaturesTask implements Callable<Void> {
         if (toPrint.length() > 0) {
             // TODO: Is this where we say what the (original) sha was?
             // To tie transformed samples back to originals
-            System.out.println(toPrint);
+            System.out.println(fromFile + " " + toPrint);
         }
     }
 

@@ -63,7 +63,8 @@ public class App {
 
                 ExtractFeaturesTask task = new ExtractFeaturesTask(
                     s_CommandLineValues,
-                    asJson.get("source_code").getAsString()
+                    asJson.get("source_code").getAsString(),
+                    asJson.get("from_file").getAsString()
                 );
 
                 tasks.add(task);

@@ -55,7 +55,7 @@ class ExtractFeaturesTask implements Callable<Void> {
         if (toPrint.length() > 0) {
             // TODO: Is this where we say what the (original) sha was?
             // To tie transformed samples back to originals
-            System.out.println(fromFile + " " + toPrint);
+            System.out.println(toPrint);
         }
     }
 
@@ -111,7 +111,7 @@ class ExtractFeaturesTask implements Callable<Void> {
             builder.append(toPrint);
 
 
-            methodsOutputs.add(builder.toString());
+            methodsOutputs.add(fromFile + " " + builder.toString());
 
         }
         return StringUtils.join(methodsOutputs, "\n");

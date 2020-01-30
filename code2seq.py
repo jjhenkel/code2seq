@@ -23,6 +23,7 @@ if __name__ == '__main__':
     parser.add_argument('--predict', action='store_true')
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--seed', type=int, default=239)
+    parser.add_argument("-bs", dest="batch_size", type=int, help="size of batch in training", required=False)
     args = parser.parse_args()
 
     np.random.seed(args.seed)

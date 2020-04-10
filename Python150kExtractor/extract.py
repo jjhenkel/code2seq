@@ -38,20 +38,24 @@ def __terminals(ast, node_index, args):
     stack, paths = [], []
 
     def dfs(v):
+        # Skip DEF node
+        if v == node_index + 1:
+            return
+
         stack.append(v)
 
         v_node = ast[v]
 
         if 'value' in v_node:
-            if v == node_index:  # Top-level func def node.
+            if v == node_index + 2:  # Top-level func def node.
                 if args.use_method_name:
                     paths.append((stack.copy(), METHOD_NAME))
             else:
                 v_type = v_node['type']
 
-                if v_type.startswith('Name'):
+                if v_type == "NAME":
                     paths.append((stack.copy(), v_node['value']))
-                elif args.use_nums and v_type == 'Num':
+                elif args.use_nums and v_type == 'NUMBER':
                     paths.append((stack.copy(), NUM))
                 else:
                     pass
@@ -117,10 +121,10 @@ def __delim_name(name):
 
 def __collect_sample(ast, fd_index, args):
     root = ast[fd_index]
-    if root['type'] != 'FunctionDef':
+    if root['type'] != 'funcdef':
         raise ValueError('Wrong node type.')
 
-    target = root['value']
+    target = ast[fd_index + 2]['value']
 
     tree_paths = __raw_tree_paths(ast, fd_index, args)
     contexts = []
@@ -145,7 +149,7 @@ def __collect_sample(ast, fd_index, args):
 def __collect_samples(ast, args):
     samples = []
     for node_index, node in enumerate(ast['ast']):
-        if node['type'] == 'FunctionDef':
+        if node['type'] == 'funcdef':
             sample = __collect_sample(ast['ast'], node_index, args)
             if sample is not None:
                 samples.append((ast['from_file'], sample))

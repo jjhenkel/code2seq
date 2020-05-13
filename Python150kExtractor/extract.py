@@ -5,7 +5,6 @@ import json
 import multiprocessing
 import itertools
 import tqdm
-import joblib
 import numpy as np
 
 from pathlib import Path
@@ -25,13 +24,10 @@ parser.add_argument('--seed', type=int, default=239)
 
 
 def __collect_asts(json_file):
-    asts = []
-    with open(json_file, 'r', encoding='utf-8') as f:
-        for line in f:
-            ast = json.loads(line.strip())
-            asts.append(ast)
-
-    return asts
+    return list(filter(
+        None,
+        [ x.strip() for x in open(json_file, 'r', encoding='utf-8').readlines() ]
+    ))
 
 
 def __terminals(ast, node_index, args):
@@ -146,7 +142,10 @@ def __collect_sample(ast, fd_index, args):
     return f'{target} {context}'
 
 
-def __collect_samples(ast, args):
+def __collect_samples(as_tuple):
+    ast = json.loads(as_tuple[0])
+    args = as_tuple[1]
+
     samples = []
     for node_index, node in enumerate(ast['ast']):
         if node['type'] == 'funcdef':
@@ -158,11 +157,14 @@ def __collect_samples(ast, args):
 
 
 def __collect_all_and_save(asts, args, output_file):
-    parallel = joblib.Parallel(n_jobs=args.n_jobs)
-    func = joblib.delayed(__collect_samples)
+    targets = [ (ast, args) for ast in asts ]
 
-    samples = parallel(func(ast, args) for ast in tqdm.tqdm(asts, desc="  + Collecting and saving to: '{}'".format(output_file)))
-    samples = list(itertools.chain.from_iterable(samples))
+    pool = multiprocessing.Pool()
+    samples = list(itertools.chain.from_iterable(tqdm.tqdm(
+        pool.imap_unordered(__collect_samples, targets, len(targets) // args.n_jobs),
+        desc="  + Collecting and saving to: '{}'".format(output_file),
+        total=len(targets)
+    )))
 
     with open(output_file, 'w') as f:
         for line_index, (from_file, line) in enumerate(samples):

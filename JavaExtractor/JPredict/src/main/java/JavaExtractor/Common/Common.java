@@ -4,6 +4,7 @@ import JavaExtractor.FeaturesEntities.Property;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.UserDataKey;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -24,11 +25,16 @@ public final class Common {
     public static final String internalSeparator = "|";
 
     public static String normalizeName(String original, String defaultString) {
+        if (original.matches("\"?REPLACEME\\d+\"?")) {
+            return "@R_" + original.replace("REPLACEME", "").replaceAll("\"", "") + "@";
+        }
+
         original = original.toLowerCase().replaceAll("\\\\n", "") // escaped new
                 // lines
                 .replaceAll("//s+", "") // whitespaces
                 .replaceAll("[\"',]", "") // quotes, apostrophies, commas
                 .replaceAll("\\P{Print}", ""); // unicode weird characters
+        
         String stripped = original.replaceAll("[^A-Za-z]", "");
         if (stripped.length() == 0) {
             String carefulStripped = original.replaceAll(" ", "_");
@@ -53,6 +59,10 @@ public final class Common {
     }
 
     public static ArrayList<String> splitToSubtokens(String str1) {
+        if (str1.matches("\"?REPLACEME\\d+\"?")) {
+            return new ArrayList<String>(Arrays.asList("@R_" + str1.replace("REPLACEME", "").replaceAll("\"", "") + "@"));
+        }
+
         String str2 = str1.replace("|", " ");
         String str3 = str2.trim();
         return Stream.of(str3.split("(?<=[a-z])(?=[A-Z])|_|[0-9]|(?<=[A-Z])(?=[A-Z][a-z])|\\s+"))

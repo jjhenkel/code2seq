@@ -11,6 +11,7 @@ from pathlib import Path
 from sklearn import model_selection as sklearn_model_selection
 
 METHOD_NAME, NUM = 'METHODNAME', 'NUM'
+RT_REGEX = re.compile('\'?"?REPLACEME\d+"?\'?')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', required=True, type=str)
@@ -28,6 +29,29 @@ def __collect_asts(json_file):
         None,
         [ x.strip() for x in open(json_file, 'r', encoding='utf-8').readlines() ]
     ))
+
+
+def __maybe_rt(value):
+    if RT_REGEX.match(value):
+        return "@R_" + value.strip().replace("REPLACEME", "").replace("'", '').replace('"', '') + "@"
+    return value
+
+
+def __maybe_rt_str(value):
+    if RT_REGEX.match(value):
+        return "@R_" + value.strip().replace("REPLACEME", "").replace("'", '').replace('"', '') + "@"
+    
+    value = re.sub(
+        "[^A-Za-z0-9|]", "",
+        re.sub(
+            r'["\',]', "",
+            re.sub(
+                r'\s+', '|', value.lower().replace('\\\\n', '')
+            )
+        )
+    ).strip('|')
+
+    return value
 
 
 def __terminals(ast, node_index, args):
@@ -50,9 +74,11 @@ def __terminals(ast, node_index, args):
                 v_type = v_node['type']
 
                 if v_type == "NAME":
-                    paths.append((stack.copy(), v_node['value']))
+                    paths.append((stack.copy(), __maybe_rt(v_node['value'])))
                 elif args.use_nums and v_type == 'NUMBER':
                     paths.append((stack.copy(), NUM))
+                elif v_type == 'STRING':
+                    paths.append((stack.copy(), __maybe_rt_str(v_node['value'][:50])))
                 else:
                     pass
 
@@ -98,6 +124,9 @@ def __raw_tree_paths(ast, node_index, args):
 
 
 def __delim_name(name):
+    if name.startswith("@R_") and name.endswith("@"):
+        return name
+
     if name in {METHOD_NAME, NUM}:
         return name
 
@@ -110,9 +139,10 @@ def __delim_name(name):
 
     blocks = []
     for underscore_block in name.split('_'):
-        blocks.extend(camel_case_split(underscore_block))
+        for bar_block in underscore_block.split('|'):
+            blocks.extend(camel_case_split(bar_block))
 
-    return '|'.join(block.lower() for block in blocks)
+    return '|'.join(block.lower()[:50] for block in blocks)
 
 
 def __collect_sample(ast, fd_index, args):
@@ -184,8 +214,8 @@ def main():
     output_dir = Path(args.output_dir)
     output_dir.mkdir(exist_ok=True)
     for split_name, split in zip(
-            ('train', 'valid', 'test'),
-            (train, valid, test),
+        ('train', 'valid', 'test'),
+        (train, valid, test),
     ):
         output_file = output_dir / f'{split_name}_output_file.txt'
         __collect_all_and_save(split, args, output_file)
